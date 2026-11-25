@@ -2,29 +2,124 @@
 #define HEIST_H
 
 #include <iostream>
+#include <fstream>
 #include <string>
-#include <stdexcept>
+#include <ctime>
+#include <cstdlib>
+
 using namespace std;
 
-// Class Begin: These shared structures and enumerations utilize simple data types
-// to transfer clues and represent the different states and choices of the game.
-enum GameState
+// Class Begin: GameException
+// This class gives one common format for errors throughout the game.
+// It utilizes a message so the user can understand what went wrong.
+class GameException
 {
-    Menu,
-    Playing,
-    Won,
-    Lost,
-    Exit
+private:
+    string message;
+
+public:
+    GameException(const string& msg);
+    string getMessage() const;
 };
 
-enum MenuChoice
+// Class Begin: DynamicArray
+// This template utilizes dynamic memory to store any data type.
+// It supports safe copying, insertion, indexing and automatic cleanup.
+template <class T>
+class DynamicArray
 {
-    NewGame = 1,
-    LeaderScoreBoard,
-    About,
-    Rules,
-    ExitGame
+private:
+    T* data;
+    int currentSize;
+    int capacity;
+
+    void resize(int newCapacity)
+    {
+        T* newData = new T[newCapacity];
+        for (int i = 0; i < currentSize; i++)
+            newData[i] = data[i];
+
+        delete[] data;
+        data = newData;
+        capacity = newCapacity;
+    }
+
+public:
+    DynamicArray(int initialCapacity = 4)
+    {
+        capacity = (initialCapacity > 0) ? initialCapacity : 4;
+        currentSize = 0;
+        data = new T[capacity];
+    }
+
+    DynamicArray(const DynamicArray& other)
+    {
+        capacity = other.capacity;
+        currentSize = other.currentSize;
+        data = new T[capacity];
+        for (int i = 0; i < currentSize; i++)
+            data[i] = other.data[i];
+    }
+
+    DynamicArray& operator=(const DynamicArray& other)
+    {
+        if (this != &other)
+        {
+            T* newData = new T[other.capacity];
+            for (int i = 0; i < other.currentSize; i++)
+                newData[i] = other.data[i];
+
+            delete[] data;
+            data = newData;
+            capacity = other.capacity;
+            currentSize = other.currentSize;
+        }
+        return *this;
+    }
+
+    ~DynamicArray()
+    {
+        delete[] data;
+    }
+
+    void add(const T& value)
+    {
+        if (currentSize == capacity)
+            resize(capacity * 2);
+
+        data[currentSize++] = value;
+    }
+
+    int size() const { return currentSize; }
+
+    bool isEmpty() const { return currentSize == 0; }
+
+    T& operator[](int index)
+    {
+        if (index < 0 || index >= currentSize)
+            throw GameException("HEIST ERROR: Array index is out of range.");
+        return data[index];
+    }
+
+    const T& operator[](int index) const
+    {
+        if (index < 0 || index >= currentSize)
+            throw GameException("HEIST ERROR: Array index is out of range.");
+        return data[index];
+    }
+
+    void clear()
+    {
+        delete[] data;
+        capacity = 4;
+        currentSize = 0;
+        data = new T[capacity];
+    }
 };
+
+// The enum identifies which row of the Scrabble board receives a letter.
+enum GameState { Menu, Playing, Won, Lost, Exit };
+enum MenuChoice { NewGame = 1, ViewLeaderBoard, About, Rules, ExitGame };
 
 enum WordRow
 {
@@ -32,31 +127,26 @@ enum WordRow
     Word2
 };
 
-// Tile utilizes a letter and a filled flag to represent one board/rack position.
+// These structures carry information between files and game classes.
 struct Tile
 {
     char tileLetter;
     bool filled;
 
-    Tile(char letter = ' ', bool isFilled = false);
-    bool operator==(const Tile& other) const;
-    bool operator<(const Tile& other) const;
-
-    friend ostream& operator<<(ostream& out, const Tile& tile);
-    friend istream& operator>>(istream& in, Tile& tile);
+    Tile(char letter = ' ', bool isFilled = false)
+    {
+        tileLetter = letter;
+        filled = isFilled;
+    }
 };
 
-// Clue utilizes one structure to carry a letter, its position, and its target row.
 struct Clue
 {
     char clueLetter;
     int cluePosition;
     WordRow clueRow;
-
-    Clue(char letter = ' ', int position = 0, WordRow row = Word1);
 };
 
-// Location stores the information that the Cottage module will utilize for each place.
 struct Location
 {
     string locName;
@@ -65,236 +155,156 @@ struct Location
     WordRow locRow;
     bool locSearchFlag;
 
-    Location(string name = "", char letter = ' ', int position = 0,
-             WordRow row = Word1, bool searched = false);
-
-    friend ostream& operator<<(ostream& out, const Location& location);
-    friend istream& operator>>(istream& in, Location& location);
+    Location()
+    {
+        locName = "";
+        letterClueLoc = ' ';
+        boardPosLoc = 0;
+        locRow = Word1;
+        locSearchFlag = false;
+    }
 };
 
-// Class Begin: TileRack utilizes dynamic memory to own and manage collected letter tiles.
-// Its copy operations utilize deep copying so separate racks never share the same array.
-class TileRack
+struct CharacterRecord
 {
-private:
-    Tile* tiles;
-    int capacity;
-    int tileCount;
-
-    void copyFrom(const TileRack& other);
-
-public:
-    explicit TileRack(int maxCapacity = 8);
-    TileRack(const TileRack& other);
-    TileRack& operator=(const TileRack& other);
-    ~TileRack();
-
-    void addTile(const Tile& tile);
-    void addLetter(char letter);
-    Tile removeTile(int index);
-    void removeLetter(int index);
-    void clear();
-
-    int getCount() const;
-    int getCapacity() const;
-    bool isEmpty() const;
-    bool isFull() const;
-    char getLetter(int index) const;
-    void display() const;
-
-    TileRack operator+(const TileRack& other) const;
-
-    friend ostream& operator<<(ostream& out, const TileRack& rack);
-};
-
-// Class Begin: Character utilizes inheritance to store information common to every person.
-// Its pure virtual display function ensures every concrete character provides its own display.
-class Character
-{
-private:
-    string characterName;
-    string characterRole;
+    string name;
+    string role;
     string nationality;
+    int word2Position;
+    char clueLetter;
     bool isCulprit;
+    bool interviewed;
 
-protected:
-    void displayBasic(ostream& out) const;
-
-public:
-    Character(const string& name, const string& role,
-              const string& nation, bool culprit = false);
-    virtual ~Character();
-
-    string getName() const;
-    string getRole() const;
-    string getNationality() const;
-    bool getIsCulprit() const;
-
-    void setName(const string& name);
-    void setRole(const string& role);
-    void setNationality(const string& nation);
-    void setIsCulprit(bool value);
-
-    virtual void display() const = 0;
-    virtual bool canBeInterviewed(int credibility) const;
-
-    friend ostream& operator<<(ostream& out, const Character& character);
-    friend istream& operator>>(istream& in, Character& character);
-    friend class GameEngine;
+    CharacterRecord()
+    {
+        name = "";
+        role = "";
+        nationality = "";
+        word2Position = 0;
+        clueLetter = ' ';
+        isCulprit = false;
+        interviewed = false;
+    }
 };
 
-// Class Begin: Victim utilizes Character but is not a suspect in the investigation.
-// The interview rule utilizes the required minimum credibility for the business owner.
-class Victim : public Character
-{
-public:
-    Victim(const string& name = "Mr.Leonardo",
-           const string& nation = "French");
-    void display() const override;
-    bool canBeInterviewed(int credibility) const override;
-};
-
-// Class Begin: Suspect utilizes Character as the common base for all possible culprits.
-// It stores the character clue once so every suspect role can reuse the same clue data.
-class Suspect : public Character
+// Class Begin: Cottage
+// Cottage utilizes a DynamicArray to manage its seven Location objects.
+// Locations are aggregated because they are stored and managed as a collection.
+class Cottage
 {
 private:
-    Clue characterClue;
+    // Earlier raw DMA approach (kept as required by Module 8):
+    // Location* LocCache; int locationCount; // allocated with new[] and released with delete[]
+    DynamicArray<Location> LocCache;
 
 public:
-    Suspect(const string& name, const string& role, const string& nation,
-            bool culprit = false, const Clue& clue = Clue());
-    Clue getCharacterClue() const;
-    void setCharacterClue(const Clue& clue);
-    void display() const override;
+    Cottage();
+    Cottage(const Cottage& other);
+    Cottage& operator=(const Cottage& other);
+
+    void addLocation(const Location& location);
+    int getLocationCount() const;
+    bool isSearched(int index) const;
+    Location& getLocation(int index);
+    const Location& getLocation(int index) const;
+    void displayLocations() const;
 };
 
-// Class Begin: BusinessRelations virtually inherits Suspect to prevent duplicate
-// Suspect/Character objects when the PA also inherits CloseRelations.
-class BusinessRelations : virtual public Suspect
-{
-public:
-    BusinessRelations(const string& name, const string& role,
-                      const string& nation, bool culprit = false,
-                      const Clue& clue = Clue());
-    void display() const override;
-};
-
-// Class Begin: HouseHelp utilizes Suspect for staff members who can be interviewed
-// at any credibility level according to the project requirements.
-class HouseHelp : public Suspect
-{
-public:
-    HouseHelp(const string& name, const string& role,
-              const string& nation, bool culprit = false,
-              const Clue& clue = Clue());
-    void display() const override;
-    bool canBeInterviewed(int credibility) const override;
-};
-
-// Class Begin: CloseRelations virtually inherits Suspect to solve the PA diamond
-// together with BusinessRelations while retaining the owner's close relations.
-class CloseRelations : virtual public Suspect
-{
-public:
-    CloseRelations(const string& name, const string& role,
-                   const string& nation, bool culprit = false,
-                   const Clue& clue = Clue());
-    void display() const override;
-};
-
-// Class Begin: Partner utilizes BusinessRelations for either of the two business partners.
-// Partners can be interviewed only when detective credibility is at least 50.
-class Partner : public BusinessRelations
-{
-public:
-    Partner(const string& name, const string& role, const string& nation,
-            bool culprit = false, const Clue& clue = Clue());
-    void display() const override;
-    bool canBeInterviewed(int credibility) const override;
-};
-
-// Class Begin: PA utilizes both business and close relations, demonstrating a diamond.
-// Virtual inheritance ensures that PA contains only one shared Suspect base.
-class PA : public BusinessRelations, public CloseRelations
-{
-public:
-    PA(const string& name = "Mr.Jad", const string& nation = "Egyptian",
-       bool culprit = false, const Clue& clue = Clue());
-    void display() const override;
-    bool canBeInterviewed(int credibility) const override;
-};
-
-// Class Begin: Cook utilizes HouseHelp and keeps the staff role as Cook.
-// HouseHelp supplies the rule that staff can always be interviewed.
-class Cook : public HouseHelp
-{
-public:
-    Cook(const string& name = "Mr.Enzo", const string& nation = "Italian",
-         bool culprit = false, const Clue& clue = Clue());
-    void display() const override;
-};
-
-// Class Begin: Guard utilizes HouseHelp and keeps the staff role as Guard.
-// The inherited interview rule allows the detective to interview the Guard at any time.
-class Guard : public HouseHelp
-{
-public:
-    Guard(const string& name = "Mr.Lukas", const string& nation = "German",
-          bool culprit = false, const Clue& clue = Clue());
-    void display() const override;
-};
-
-// Class Begin: Servant utilizes HouseHelp and keeps the staff role as Servant.
-// The inherited interview rule allows the detective to interview the Servant at any time.
-class Servant : public HouseHelp
-{
-public:
-    Servant(const string& name = "Mr.Toby", const string& nation = "British",
-            bool culprit = false, const Clue& clue = Clue());
-    void display() const override;
-};
-
-// Class Begin: Child utilizes CloseRelations for the owner's child.
-// The child can be interviewed only for age 15-19 and credibility of at least 75.
-class Child : public CloseRelations
+// Class Begin: Scrabble
+// Scrabble utilizes two dynamic rows: seven slots for Word 1 and eight for Word 2.
+// Each tile is placed at the exact position read from the project data files.
+class Scrabble
 {
 private:
-    int age;
+    // Earlier jagged raw DMA approach (kept as required by Module 8):
+    // Tile* wordOneRaw; Tile* wordTwoRaw; // allocate 7 and 8 Tile slots respectively
+    DynamicArray<Tile> wordOne;
+    DynamicArray<Tile> wordTwo;
+    string targetWordOne;
+    string targetWordTwo;
 
 public:
-    Child(const string& name = "Ms.Celine", const string& nation = "French",
-          int childAge = 17, bool culprit = false, const Clue& clue = Clue());
-    int getAge() const;
-    void setAge(int childAge);
-    void display() const override;
-    bool canBeInterviewed(int credibility) const override;
+    Scrabble();
+    Scrabble(const Scrabble& other);
+    Scrabble& operator=(const Scrabble& other);
+    void setTargetWords(const string& first, const string& second);
+    void placeLetter(WordRow row, char letter, int position);
+    bool isComplete(WordRow row) const;
+    bool bothRowsComplete() const;
+    string revealWord(WordRow row) const;
+    void displayBoard() const;
 };
 
-// Class Begin: Detective utilizes Character as the player and owns a TileRack.
-// GameEngine will update the stored turn count as required by the project.
-class Detective : public Character
+// Class Begin: LeaderBoard
+// LeaderBoard utilizes file handling to preserve results between game sessions.
+// New results are appended so previous detectives' scores remain available.
+class LeaderBoard
 {
 private:
+    string fileName;
+
+public:
+    LeaderBoard(const string& file = "leader/scoreBoard.txt");
+    void displayScores() const;
+    void saveScore(const string& detective, const string& result,
+                   int credibility, int turnsLeft, const string& culprit) const;
+};
+
+// Class Begin: GameEngine
+// GameEngine is a Singleton so only one central game controller exists.
+// It coordinates file loading, game initialization, the board and score management.
+class GameEngine
+{
+private:
+    static GameEngine* instance;
+
+    Cottage cottage;
+    Scrabble scrabble;
+    LeaderBoard leaderBoard;
+
+    DynamicArray<CharacterRecord> characters;
+    DynamicArray<string> culpritRoles;
+
+    string detectiveName;
+    string selectedCulprit;
+    string targetWord1;
+    string targetWord2;
+    string aboutText;
+
+    int maxTurns;
+    int startingCredibility;
+    int wrongTurnPenalty;
+    int wrongWordPenalty;
+    int turnsUsed;
     int credibility;
-    int turns;
-    TileRack rack;
+
+    GameEngine();
+    GameEngine(const GameEngine&);
+    GameEngine& operator=(const GameEngine&);
+
+    DynamicArray<string> splitLine(const string& line, char delimiter) const;
+    int roleColumn(const string& role) const;
+    bool loadClues();
+    bool loadLocations();
+    bool loadCharacters();
+    void loadRules();
+    void loadAbout();
+    void showRules() const;
+    void showAbout() const;
+    void startNewGame();
+    void gameLoop();
+    void visitLocation();
+    void interviewPerson();
+    void formWords();
+    void accuseSuspect();
+    void finishGame(const string& result);
+    void addTurn();
+    bool gameIsOver() const;
 
 public:
-    Detective(const string& name = "Agent_Halim", int startingCredibility = 100,
-              int startingTurns = 0, int rackCapacity = 8);
-
-    int getCredibility() const;
-    int getTurns() const;
-    void setCredibility(int value);
-    void setTurns(int value);
-    void changeCredibility(int amount);
-    void incrementTurns();
-
-    TileRack& getRack();
-    const TileRack& getRack() const;
-
-    void display() const override;
+    static GameEngine& getInstance();
+    void run();
+    ~GameEngine();
 };
 
 #endif
