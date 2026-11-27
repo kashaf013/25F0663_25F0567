@@ -1,0 +1,23 @@
+========================================================
+                THE LOCKER HEIST
+         A Detective Game backed by OOP Principles
+========================================================
+
+Developed By:
+  [Student 1: Syeda Kashaf Zahra]  |  [25F-0663]
+  [Student 2: Aliha Iman]  |  [25F-0567]
+
+Course:  CL1004 - Object Oriented Programming
+Section: CS-3A
+Semester: Fall 2026
+Lab Instructor: [Zainab Noor]
+
+-------------- ABOUT THE GAME --------------
+A wealthy business owner hosted a party at their cottage.
+During the party, a locker hidden behind a bookshelf in
+the Study Room was robbed. Eight people were present and
+one of them is the culprit.
+
+The detective visits seven locations and interviews eight
+people to collect letter clues, reveal two words, and identify
+the culprit before credibility runs out.
