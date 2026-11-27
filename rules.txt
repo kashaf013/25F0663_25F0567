@@ -1,6 +1,38 @@
-Max_Turns=25
-Starting_Credibility=100
-Every_Wrong_Turn=-5
-Every_Wrong_Word=-10
-Win_Condition=Accuse_Correct_Culprit
-Lose_Condition=Credibility_Zero_Or_Turns_Exhausted
+============================================================
+                    THE LOCKER HEIST
+                       GAME RULES
+============================================================
+
+1. GAME START
+   - Each detective starts with 100 credibility points.
+   - A total of 25 turns are available to complete the investigation.
+
+2. INVESTIGATION
+   - The detective must investigate the available locations
+     and collect letter clues.
+   - The collected letters are used to complete two secret
+     words for identifying the culprit.
+
+3. CREDIBILITY SYSTEM
+   - Each wrong turn reduces credibility by 5 points.
+   - Each incorrect word reduces credibility by 10 points.
+   - The detective must manage credibility carefully during
+     the investigation.
+
+4. WINNING CONDITION
+   - The detective wins by correctly identifying and
+     accusing the culprit.
+
+5. LOSING CONDITION
+   - The game ends in a loss if credibility reaches zero.
+   - The game also ends if all 25 turns are used before
+     identifying the correct culprit.
+
+6. FINAL OBJECTIVE
+   - Investigate the cottage, collect the required clues,
+     complete both secret words and identify the culprit
+     before the available turns or credibility run out.
+
+============================================================
+                    END OF GAME RULES
+============================================================
