@@ -1,5 +1,4 @@
 #include "heist.h"
-
 // Main is the driver file. It starts the single GameEngine object
 // and catches any exception that was not handled inside the game.
 int main()
