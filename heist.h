@@ -247,7 +247,7 @@ public:
     LeaderBoard(const string& file = "leader/scoreBoard.txt");
     void displayScores() const;
     void saveScore(const string& detective, const string& result,
-                   int credibility, int turnsLeft, const string& culprit) const;
+        int credibility, int turnsLeft, const string& culprit) const;
 };
 
 // Class Begin: GameEngine
