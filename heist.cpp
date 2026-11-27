@@ -59,8 +59,8 @@ void Cottage::displayLocations() const
     for (int i = 0; i < LocCache.size(); i++)
     {
         cout << "[" << i + 1 << "] " << LocCache[i].locName
-             << " - " << (LocCache[i].locSearchFlag ? "Searched" : "Not searched")
-             << "\n";
+            << " - " << (LocCache[i].locSearchFlag ? "Searched" : "Not searched")
+            << "\n";
     }
 }
 
@@ -78,7 +78,7 @@ Scrabble::Scrabble()
 
 Scrabble::Scrabble(const Scrabble& other)
     : wordOne(other.wordOne), wordTwo(other.wordTwo),
-      targetWordOne(other.targetWordOne), targetWordTwo(other.targetWordTwo)
+    targetWordOne(other.targetWordOne), targetWordTwo(other.targetWordTwo)
 {
     // Copy each row independently so both boards own their own tile arrays.
 }
@@ -202,7 +202,7 @@ void LeaderBoard::displayScores() const
 }
 
 void LeaderBoard::saveScore(const string& detective, const string& result,
-                            int credibility, int turnsLeft, const string& culprit) const
+    int credibility, int turnsLeft, const string& culprit) const
 {
     ofstream output(fileName.c_str(), ios::app);
 
@@ -210,12 +210,13 @@ void LeaderBoard::saveScore(const string& detective, const string& result,
         throw GameException("HEIST ERROR: Score file could not be opened for saving.");
 
     time_t now = time(0);
-    tm* localTime = localtime(&now);
+    tm localTime;
+    localtime_s(&localTime, &now);
     char dateText[20];
-    strftime(dateText, sizeof(dateText), "%d-%m-%y", localTime);
+    strftime(dateText, sizeof(dateText), "%d-%m-%y", &localTime);
 
     output << detective << "|" << result << "|" << credibility << "|"
-           << turnsLeft << "|" << culprit << "|" << dateText << "\n";
+        << turnsLeft << "|" << culprit << "|" << dateText << "\n";
 
     output.close();
 }
@@ -549,7 +550,7 @@ void GameEngine::visitLocation()
         cin >> again;
         if (again == 'Y' || again == 'y')
             cout << "Previously collected letter: " << location.letterClueLoc
-                 << " at position " << location.boardPosLoc << " of Word 1.\n";
+            << " at position " << location.boardPosLoc << " of Word 1.\n";
         return;
     }
 
@@ -563,8 +564,8 @@ void GameEngine::visitLocation()
         location.locSearchFlag = true;
 
         cout << "Letter " << location.letterClueLoc
-             << " collected at position " << location.boardPosLoc
-             << " of Word 1.\n";
+            << " collected at position " << location.boardPosLoc
+            << " of Word 1.\n";
         addTurn();
     }
 }
@@ -576,9 +577,9 @@ void GameEngine::interviewPerson()
     for (int i = 0; i < characters.size(); i++)
     {
         cout << "[" << i + 1 << "] " << characters[i].name
-             << " (" << characters[i].role << ") - "
-             << (characters[i].interviewed ? "Interviewed" : "Not interviewed")
-             << "\n";
+            << " (" << characters[i].role << ") - "
+            << (characters[i].interviewed ? "Interviewed" : "Not interviewed")
+            << "\n";
     }
 
     int choice;
@@ -599,7 +600,7 @@ void GameEngine::interviewPerson()
         cin >> again;
         if (again == 'Y' || again == 'y')
             cout << "Previously collected letter: " << person.clueLetter
-                 << " at position " << person.word2Position << " of Word 2.\n";
+            << " at position " << person.word2Position << " of Word 2.\n";
         return;
     }
 
@@ -613,8 +614,8 @@ void GameEngine::interviewPerson()
         person.interviewed = true;
 
         cout << "Letter " << person.clueLetter
-             << " collected at position " << person.word2Position
-             << " of Word 2.\n";
+            << " collected at position " << person.word2Position
+            << " of Word 2.\n";
         addTurn();
     }
 }
@@ -685,8 +686,8 @@ void GameEngine::gameLoop()
     {
         cout << "\n----------------------------------\n";
         cout << "Detective: " << detectiveName
-             << " | Credibility: " << credibility
-             << " | Turns used: " << turnsUsed << "/" << maxTurns << "\n";
+            << " | Credibility: " << credibility
+            << " | Turns used: " << turnsUsed << "/" << maxTurns << "\n";
 
         scrabble.displayBoard();
 
