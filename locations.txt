@@ -1,8 +1,8 @@
 Place|W1Pos|Cook|Guard|Servant|P1|P2|PA|Child
-Bedroom_1|1|A|G|L|T|M|P|R
-Bedroom_2|2|L|E|O|R|I|H|E
-Study_Room|3|F|R|O|I|K|A|N
-Garden|4|R|M|T|D|H|R|O
-Kitchen|5|E|A|E|E|A|A|I
-Dining_Room|6|D|N|R|N|I|O|R
-Living_Room|7|O|S|S|T|L|H|S
+Bedroom No 1|1|L|P|B|T|M|P|T
+Bedroom No 2|2|A|A|U|R|I|H|O
+Study Room|3|S|T|T|U|K|A|Y
+Garden|4|A|R|L|S|H|R|S
+Kitchen|5|G|O|E|T|A|A|H
+Dining Room|6|N|L|R|E|I|O|O
+Living Room|7|A|S|S|D|L|H|P
