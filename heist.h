@@ -1,17 +1,12 @@
 #ifndef HEIST_H
 #define HEIST_H
 
-#include <iostream>
+#include "heist.h"
 #include <fstream>
-#include <string>
 #include <ctime>
 #include <cstdlib>
 
-using namespace std;
-
-// Class Begin: GameException
-// This class gives one common format for errors throughout the game.
-// It utilizes a message so the user can understand what went wrong.
+// GameException handles errors throughout the game.
 class GameException
 {
 private:
@@ -22,9 +17,7 @@ public:
     string getMessage() const;
 };
 
-// Class Begin: DynamicArray
-// This template utilizes dynamic memory to store any data type.
-// It supports safe copying, insertion, indexing and automatic cleanup.
+// DynamicArray utilizes dynamic memory for different data types.
 template <class T>
 class DynamicArray
 {
@@ -36,6 +29,7 @@ private:
     void resize(int newCapacity)
     {
         T* newData = new T[newCapacity];
+
         for (int i = 0; i < currentSize; i++)
             newData[i] = data[i];
 
@@ -57,6 +51,7 @@ public:
         capacity = other.capacity;
         currentSize = other.currentSize;
         data = new T[capacity];
+
         for (int i = 0; i < currentSize; i++)
             data[i] = other.data[i];
     }
@@ -66,6 +61,7 @@ public:
         if (this != &other)
         {
             T* newData = new T[other.capacity];
+
             for (int i = 0; i < other.currentSize; i++)
                 newData[i] = other.data[i];
 
@@ -74,6 +70,7 @@ public:
             capacity = other.capacity;
             currentSize = other.currentSize;
         }
+
         return *this;
     }
 
@@ -90,14 +87,21 @@ public:
         data[currentSize++] = value;
     }
 
-    int size() const { return currentSize; }
+    int size() const
+    {
+        return currentSize;
+    }
 
-    bool isEmpty() const { return currentSize == 0; }
+    bool isEmpty() const
+    {
+        return currentSize == 0;
+    }
 
     T& operator[](int index)
     {
         if (index < 0 || index >= currentSize)
             throw GameException("HEIST ERROR: Array index is out of range.");
+
         return data[index];
     }
 
@@ -105,6 +109,7 @@ public:
     {
         if (index < 0 || index >= currentSize)
             throw GameException("HEIST ERROR: Array index is out of range.");
+
         return data[index];
     }
 
@@ -117,54 +122,7 @@ public:
     }
 };
 
-// The enum identifies which row of the Scrabble board receives a letter.
-enum GameState { Menu, Playing, Won, Lost, Exit };
-enum MenuChoice { NewGame = 1, ViewLeaderBoard, About, Rules, ExitGame };
-
-enum WordRow
-{
-    Word1,
-    Word2
-};
-
-// These structures carry information between files and game classes.
-struct Tile
-{
-    char tileLetter;
-    bool filled;
-
-    Tile(char letter = ' ', bool isFilled = false)
-    {
-        tileLetter = letter;
-        filled = isFilled;
-    }
-};
-
-struct Clue
-{
-    char clueLetter;
-    int cluePosition;
-    WordRow clueRow;
-};
-
-struct Location
-{
-    string locName;
-    char letterClueLoc;
-    int boardPosLoc;
-    WordRow locRow;
-    bool locSearchFlag;
-
-    Location()
-    {
-        locName = "";
-        letterClueLoc = ' ';
-        boardPosLoc = 0;
-        locRow = Word1;
-        locSearchFlag = false;
-    }
-};
-
+// CharacterRecord stores information loaded from characters.txt.
 struct CharacterRecord
 {
     string name;
@@ -187,14 +145,10 @@ struct CharacterRecord
     }
 };
 
-// Class Begin: Cottage
-// Cottage utilizes a DynamicArray to manage its seven Location objects.
-// Locations are aggregated because they are stored and managed as a collection.
+// Cottage manages the locations used in the investigation.
 class Cottage
 {
 private:
-    // Earlier raw DMA approach (kept as required by Module 8):
-    // Location* LocCache; int locationCount; // allocated with new[] and released with delete[]
     DynamicArray<Location> LocCache;
 
 public:
@@ -210,14 +164,10 @@ public:
     void displayLocations() const;
 };
 
-// Class Begin: Scrabble
-// Scrabble utilizes two dynamic rows: seven slots for Word 1 and eight for Word 2.
-// Each tile is placed at the exact position read from the project data files.
+// Scrabble manages the two clue-word rows.
 class Scrabble
 {
 private:
-    // Earlier jagged raw DMA approach (kept as required by Module 8):
-    // Tile* wordOneRaw; Tile* wordTwoRaw; // allocate 7 and 8 Tile slots respectively
     DynamicArray<Tile> wordOne;
     DynamicArray<Tile> wordTwo;
     string targetWordOne;
@@ -227,6 +177,7 @@ public:
     Scrabble();
     Scrabble(const Scrabble& other);
     Scrabble& operator=(const Scrabble& other);
+
     void setTargetWords(const string& first, const string& second);
     void placeLetter(WordRow row, char letter, int position);
     bool isComplete(WordRow row) const;
@@ -235,9 +186,7 @@ public:
     void displayBoard() const;
 };
 
-// Class Begin: LeaderBoard
-// LeaderBoard utilizes file handling to preserve results between game sessions.
-// New results are appended so previous detectives' scores remain available.
+// LeaderBoard handles saving and displaying game results.
 class LeaderBoard
 {
 private:
@@ -245,14 +194,14 @@ private:
 
 public:
     LeaderBoard(const string& file = "leader/scoreBoard.txt");
+
     void displayScores() const;
+
     void saveScore(const string& detective, const string& result,
         int credibility, int turnsLeft, const string& culprit) const;
 };
 
-// Class Begin: GameEngine
-// GameEngine is a Singleton so only one central game controller exists.
-// It coordinates file loading, game initialization, the board and score management.
+// GameEngine controls the complete game using the Singleton pattern.
 class GameEngine
 {
 private:
@@ -284,13 +233,16 @@ private:
 
     DynamicArray<string> splitLine(const string& line, char delimiter) const;
     int roleColumn(const string& role) const;
+
     bool loadClues();
     bool loadLocations();
     bool loadCharacters();
+
     void loadRules();
     void loadAbout();
     void showRules() const;
     void showAbout() const;
+
     void startNewGame();
     void gameLoop();
     void visitLocation();
@@ -303,7 +255,10 @@ private:
 
 public:
     static GameEngine& getInstance();
+    static void destroyInstance();
+
     void run();
+
     ~GameEngine();
 };
 
