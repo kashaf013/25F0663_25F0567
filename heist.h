@@ -1,7 +1,7 @@
 #ifndef HEIST_H
 #define HEIST_H
 
-#include "heist.h"
+#include "game.h"
 #include <fstream>
 #include <ctime>
 #include <cstdlib>
